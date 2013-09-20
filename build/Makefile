@@ -3,7 +3,7 @@ LOCALE ?= en_US
 GENERATED_FILES = \
 	dist/d3.js \
 	dist/d3.min.js \
-        dist/amd/d3.js \
+	dist/amd/d3.js \
 	d3/format/format-localized.js \
 	d3/time/format-localized.js \
 	bower.json \

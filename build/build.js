@@ -3,10 +3,12 @@
   "out": "dist/d3.js",
   "baseUrl": "./",
   "optimize": "none",
+  "skipSemiColonInsertion": true,
   "onBuildWrite": function(moduleName, path, contents) {
     return contents
       .replace(/define\([^{]*?{/, "")
-      .replace(/\}\);[^}\w]*$/, "");
+      .replace(/\}\);[^}\w]*$/, "")
+      .replace(/\nreturn .+\n/, "");
   },
   "wrap": {
     "startFile": "d3/start.js",
