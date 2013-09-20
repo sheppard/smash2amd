@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 import os
 import re
 
@@ -22,23 +23,30 @@ def smash2amd(filename):
             return
         match = importre.match(row)
         if match:
+            # This line of the file contains an import
             dep = match.group(1)
-            if dep == "end":
+
+            # These deps are only in d3.js
+            if dep == "d3/end":
                 continue
-            if dep == "start":
-                dep = "base"
+            if dep == "d3/start":
+                dep = "d3/base"
                 export = "d3"
                 base = "d3"
-            if not dep.startswith("../"):
+
+            # For other deps, convert SMASH paths to AMD-compatible versions
+            if not dep.startswith("../") and not dep.startswith("d3"):
                 dep = "./%s" % dep
             if dep.endswith('/'):
                 dep += "index"
             deps.append(dep)
         else:
+            # This line of the file does not contain an import; check for 
+            # something that looks like an export
             match = exportre1.match(row)
             if match:
                 export = match.group(1)
-                deps.insert(0, "base")
+                deps.insert(0, "d3/base")
                 base = "d3"
             else:
                 match = exportre2.match(row)
@@ -57,13 +65,10 @@ def smash2amd(filename):
 
     out = open(filename, 'w')
     out.write(
-"""//>>excludeStart("amd", pragmas.amd)
-define(%sfunction(%s) {
-//>>excludeEnd("amd")
-%s
-//>>excludeStart("amd", pragmas.amd)%s
+"""define(%sfunction(%s) {
+%s%s
 });
-//>>excludeEnd("amd")""" % (
+""" % (
         depstr,
         base,
         "\n".join(rows),
@@ -72,11 +77,21 @@ define(%sfunction(%s) {
     
 
 def run(path):
+    if not os.path.isdir(path):
+        print path
+        smash2amd(path)
+        return
     for root, dirnames, filenames in os.walk(path):
         for filename in filenames:
             if not filename.endswith('.js'):
                 continue 
-            smash2amd(os.path.join(root, filename))
+            path = os.path.join(root, filename)
+            print path
+            smash2amd(path)
 
 if __name__ == '__main__':
-    run('.')
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+    else:
+        path = '.'
+    run(path)
